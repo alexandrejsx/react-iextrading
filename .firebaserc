@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "react-iextrading",
+    "react-iextrading": "react-iextrading"
+  }
+}
