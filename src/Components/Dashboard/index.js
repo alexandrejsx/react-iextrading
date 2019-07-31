@@ -9,44 +9,6 @@ import {
   Tooltip
 } from "recharts";
 
-const data = [
-  {
-    name: "Page A",
-    uv: 4000,
-    amt: 2400
-  },
-  {
-    name: "Page B",
-    uv: 3000,
-    amt: 2210
-  },
-  {
-    name: "Page C",
-    uv: 2000,
-    amt: 2290
-  },
-  {
-    name: "Page D",
-    uv: 2780,
-    amt: 2000
-  },
-  {
-    name: "Page E",
-    uv: 1890,
-    amt: 2181
-  },
-  {
-    name: "Page F",
-    uv: 2390,
-    amt: 2500
-  },
-  {
-    name: "Page G",
-    uv: 3490,
-    amt: 2100
-  }
-];
-
 class Dashboard extends Component {
   constructor(props) {
     super(props);
@@ -54,14 +16,38 @@ class Dashboard extends Component {
     this.state = {
       success: false,
       loading: false,
-      companyData: false,
       searchText: "",
       error: false,
       latestPrice: {},
       companyInfo: {},
-      companyLogo: ""
+      companyLogo: "",
+      loadingEarnings: false,
+      selectedChart: "",
+      selectedChartData: [],
+      chartDataDays: [],
+      chartDataMonth: []
     };
   }
+
+  componentDidMount = () => {
+    this.getTodayEarnings();
+  };
+
+  getTodayEarnings = async () => {
+    try {
+      this.setState({ loadingEarnings: true });
+      const { data } = await requestApi(`/general/getTodayEarnings`, {});
+
+      if (data.todayEarnings) {
+        this.setState({
+          todayEarnings: data.todayEarnings.data,
+          loadingEarnings: false
+        });
+      }
+    } catch (error) {
+      this.setState({ error: error.message, loadingEarnings: false });
+    }
+  };
 
   searchAction = async () => {
     const { searchText } = this.state;
@@ -69,44 +55,48 @@ class Dashboard extends Component {
     this.setState({ loading: true, error: false });
 
     try {
-      const { data } = await requestApi(`getDataBySymbol`, {
+      const { data } = await requestApi(`/general/getDataBySymbol`, {
         symbol: searchText
       });
-      let success = false;
-      let error = false;
 
       if (
-        data.latestPrice &&
         data.latestPrice.success &&
-        data.companyInfo &&
         data.companyInfo.success &&
-        data.companyLogo &&
-        data.companyLogo.success
+        data.companyLogo.success &&
+        data.chartDataDays.success &&
+        data.chartDataMonth.success
       ) {
         this.setState({
           latestPrice: data.latestPrice.data,
           companyInfo: data.companyInfo.data,
-          companyLogo: data.companyLogo.data
+          companyLogo: data.companyLogo.data,
+          chartDataDays: data.chartDataDays.data,
+          chartDataMonth: data.chartDataMonth.data,
+          selectedChartData: data.chartDataDays.data,
+          selectedChart: "days",
+          loading: false,
+          success: true
         });
-        success = true;
       } else {
-        error = true;
+        this.setState({ error: true, loading: false });
       }
-
-      this.setState({ loading: false, success, error });
     } catch (error) {
       this.setState({ loading: false, error: error.message });
     }
-    this.setState({ companyData: !this.state.companyData });
   };
 
-  renderRealTimeStatus() {
-    return (
-      <div className="d-flex flex-row trade-status">
-        <span className="trade-text">+2323 Dols</span>
-      </div>
-    );
-  }
+  handleSelectedChart = selected => {
+    const { chartDataDays, chartDataMonth } = this.state;
+    let selectedChartData = [];
+
+    if (selected === "days") {
+      selectedChartData = chartDataDays;
+    } else if (selected === "month") {
+      selectedChartData = chartDataMonth;
+    }
+
+    this.setState({ selectedChart: selected, selectedChartData });
+  };
 
   handleSearch = e => {
     const { value } = e.target;
@@ -116,9 +106,9 @@ class Dashboard extends Component {
 
   renderCompanyInfo() {
     const { companyInfo, companyLogo, latestPrice } = this.state;
-    console.log("companyInfo", companyInfo, latestPrice);
+
     return (
-      <div className="fade-in col-12 col-lg-6">
+      <div className="fade-in col-12 col-lg-6 margin-bottom-sm">
         <div className="main-card">
           <div className="bottom-line w-100 d-flex flex-row flex-wrap justify-content-between px-3 pb-3">
             <div className="d-flex flex-row col-12 col-md-6 col-lg-5">
@@ -138,6 +128,11 @@ class Dashboard extends Component {
                   latestPrice.change > 0 ? "up" : "down"
                 }`}
               >
+                {latestPrice.change > 0 ? (
+                  <i className="fas fa-sort-up mr-2" />
+                ) : (
+                  <i className="fas fa-sort-down mr-2" />
+                )}
                 {latestPrice.change} ({latestPrice.changePercent}%)
               </span>
             </div>
@@ -188,25 +183,40 @@ class Dashboard extends Component {
   }
 
   renderActionInfo() {
+    const { selectedChart, selectedChartData } = this.state;
+
     return (
       <div className="fade-in col-12 col-lg-6">
         <div className="main-card">
-          <div className="d-flex flex-row flex-wrap justify-content-center">
-            <div className="col-12 col-md-4 margin-bottom-sm">
-              <button className="button-range selected">DIA</button>
-            </div>
-            <div className="col-12 col-md-4 margin-bottom-sm">
-              <button className="button-range">MÊS</button>
-            </div>
-            <div className="col-12 col-md-4 margin-bottom-sm">
-              <button className="button-range">ANO</button>
+          <div className="d-flex flex-row justify-content-center">
+            <div className="col-12 col-lg-8 d-flex flex-row flex-wrap justify-content-center">
+              <div className="col-12 col-md-4 margin-bottom-sm">
+                <button
+                  onClick={() => this.handleSelectedChart("days")}
+                  className={`button-range ${
+                    selectedChart === "days" ? "selected" : ""
+                  }`}
+                >
+                  5 DIAS
+                </button>
+              </div>
+              <div className="col-12 col-md-4 margin-bottom-sm">
+                <button
+                  onClick={() => this.handleSelectedChart("month")}
+                  className={`button-range ${
+                    selectedChart === "month" ? "selected" : ""
+                  }`}
+                >
+                  MÊS
+                </button>
+              </div>
             </div>
           </div>
           <div className="d-flex justify-content-center">
             <LineChart
               width={600}
               height={300}
-              data={data}
+              data={selectedChartData}
               margin={{
                 top: 5,
                 right: 30,
@@ -215,12 +225,51 @@ class Dashboard extends Component {
               }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="uv" stroke="#35b127" />
+              <XAxis dataKey="label" domain={["auto", "auto"]} />
+              <YAxis type="number" domain={["auto", "auto"]} />
+              <Tooltip verticalAlign="top" />
+              <Line type="monotone" dataKey="high" stroke="#35b127" />
             </LineChart>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  renderTodayEarnings() {
+    const { todayEarnings } = this.state;
+
+    return (
+      <div className="d-flex flex-row trade-status">
+        <div className="d-flex flex-row">
+          {todayEarnings &&
+            todayEarnings.map((earning, key) => {
+              const { quote } = earning;
+              return (
+                <div key={key} className="earning-value">
+                  {quote.companyName}
+                  <span
+                    className={`mx-2 action-growth ${
+                      quote.change > 0 ? "up" : "down"
+                    }`}
+                  >
+                    <span
+                      className={`latest-price  ${
+                        quote.change > 0 ? "up" : "down"
+                      }`}
+                    >
+                      {quote.latestPrice} USD
+                    </span>
+                    {quote.change > 0 ? (
+                      <i className="fas fa-sort-up mx-2" />
+                    ) : (
+                      <i className="fas fa-sort-down mx-2" />
+                    )}
+                    {quote.change} ({quote.changePercent}%)
+                  </span>
+                </div>
+              );
+            })}
         </div>
       </div>
     );
@@ -255,7 +304,7 @@ class Dashboard extends Component {
   }
 
   render() {
-    const { loading, success, error } = this.state;
+    const { loading, success, error, loadingEarnings } = this.state;
 
     return (
       <Fragment>
@@ -279,17 +328,18 @@ class Dashboard extends Component {
             <button
               onClick={() => this.searchAction()}
               className="search-button"
+              disabled={loading}
             >
               Pesquisar
             </button>
           </div>
         </div>
-        {!loading && success && this.renderRealTimeStatus()}
+        {!loadingEarnings && this.renderTodayEarnings()}
         <div className="col-12">
           <div className="row">
             {!loading && success && this.renderCompanyInfo()}
             {!loading && success && this.renderActionInfo()}
-            {loading && this.renderLoading()}
+            {(loading || loadingEarnings) && this.renderLoading()}
             {error && this.renderMessageError()}
           </div>
         </div>

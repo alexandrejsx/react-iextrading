@@ -22,6 +22,11 @@ body {
   font-weight: 500;
 }
 
+::-webkit-scrollbar {
+  width: 10px;
+  background-color: var(--secondary-color);
+}
+
 .dashboard-title {
   font-family: "Montserrat", sans-serif;
   font-weight: 600;
@@ -73,6 +78,11 @@ body {
   transition: background 0s;
 }
 
+.search-button:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
 .trade-status {
   width: 100%;
   background-color: var(--grey);
@@ -86,13 +96,18 @@ body {
   overflow: hidden;
 }
 
-.trade-status span {
-  padding-left: 100%;
-  animation: marquee 15s linear infinite;
+.trade-status div {
+  animation: marquee 650s linear infinite;
 }
 
-.trade-status span:hover {
+.trade-status div:hover {
   animation-play-state: paused;
+}
+
+.earning-value {
+  display: flex;
+  justify-content: center;
+  width: 600px;
 }
 
 .main-card {
@@ -102,10 +117,11 @@ body {
     0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 2px 1px -1px rgba(0, 0, 0, 0.12);
   color: var(--white);
   min-height: 400px;
+  height: 100%;
   padding: 15px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: space-around;
   margin-bottom: 30px;
 }
 
@@ -139,6 +155,27 @@ body {
   font-size: 18px;
   font-family: "Montserrat", sans-serif;
   font-weight: 600;
+}
+
+.latest-price {
+  font-size: 18px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  color: var(--white);
+  padding: 0 5px;
+  border-radius: 5px;
+}
+
+.latest-price.up {
+  background-color: var(--green);
+}
+
+.latest-price.down {
+  background-color: var(--orange);
+}
+
+.action-growth i {
+  font-size: 20px;
 }
 
 .action-growth.up {
