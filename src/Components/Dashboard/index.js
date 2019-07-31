@@ -32,7 +32,7 @@ class Dashboard extends Component {
 			this.setState({ loadingEarnings: true });
 			const { data } = await requestApi(`/general/getTodayEarnings`, {});
 
-			if (data.todayEarnings) {
+			if (data && data.todayEarnings) {
 				this.setState({
 					todayEarnings: data.todayEarnings.data,
 					loadingEarnings: false,
