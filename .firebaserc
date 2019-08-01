@@ -1,6 +1,8 @@
 {
   "projects": {
     "default": "react-iextrading",
-    "react-iextrading": "react-iextrading"
+    "react-iextrading": "react-iextrading",
+    "node-trading": "node-iextrading-5e2d2",
+    "react-iex": "react-iextrading"
   }
 }
