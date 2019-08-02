@@ -75,10 +75,10 @@ class Dashboard extends Component {
 					success: true,
 				});
 			} else {
-				this.setState({ error: true, loading: false });
+				this.setState({ loading: false, error: true, success: false });
 			}
 		} catch (error) {
-			this.setState({ loading: false, error: error.message });
+			this.setState({ loading: false, error: error.message, success: false });
 		}
 	};
 
